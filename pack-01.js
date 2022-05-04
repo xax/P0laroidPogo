@@ -136,8 +136,8 @@ const seating_AAA = (p, opts = {}) => {
           translate([p.thWall, p.thWall], rectangle($s2({ size: [size[1] - p.thWall, size[2] - p.thWall] }))),
           //translate([radius+3, radius+2], circle({radius})),
           //translate([size.y-radius-3, radius+2], circle({radius})),
-          translate([size[1] / 4, radius + 1], circle({ radius })),
-          translate([size[1] / 4 * 3, radius + 1], circle({ radius }))
+          translate([size[1] / 4, radius + p.thWall], circle({ radius })),
+          translate([size[1] / 4 * 3, radius + p.thWall], circle({ radius }))
         )
       )
     )
