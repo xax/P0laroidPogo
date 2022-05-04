@@ -136,8 +136,8 @@ const seating_AAA = (p, opts = {}) => {
           translate([p.thWall, p.thWall], rectangle($s2({ size: [size[1] - p.thWall, size[2] - p.thWall] }))),
           //translate([radius+3, radius+2], circle({radius})),
           //translate([size.y-radius-3, radius+2], circle({radius})),
-          translate([size[1] / 4, radius + 2], circle({ radius })),
-          translate([size[1] / 4 * 3, radius + 2], circle({ radius }))
+          translate([size[1] / 4, radius + 1], circle({ radius })),
+          translate([size[1] / 4 * 3, radius + 1], circle({ radius }))
         )
       )
     )
@@ -171,15 +171,13 @@ const main = (p) => {
   yTop = p.dyTray + 15;
   const eltTop =
     translate([0, yTop, 0],
+      // basic top
       union(
-        // basic top
-        union(
-          subtract(
-            tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTop], radius: p.radCorners, noFlaps: true }),
-            tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTop], wdLatch: -p.wdLatch }),
-            // connector cutout
-            translate([p.dxTray - p.dxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn * 2, p.dyConn, p.dzTop * 2] })))
-          )
+        subtract(
+          tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTop], radius: p.radCorners, noFlaps: true }),
+          tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTop], wdLatch: -p.wdLatch }),
+          // connector cutout
+          translate([p.dxTray - p.dxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn * 2, p.dyConn, p.dzTop * 2] })))
         )
       )
     )
