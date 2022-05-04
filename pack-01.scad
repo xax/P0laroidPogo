@@ -5,7 +5,7 @@
                    2ATL462849 DLL (Dell)
   Dell™ Part-# D4487
 
-  for Polarid Pogo™ () / Dell Wasabi™ (PZ310)
+  for Polaroid Pogo™ () / Dell Wasabi™ (PZ310)
   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   Copyright (C) by XA, V 2022. All rights reserved.
   *****************************************************************
@@ -59,7 +59,7 @@ module tray_outer (size, wdLatch=0, radius=-1, noFlaps=false) {
     plus = (radius <= 0)? max(size.z/4, 4): radius*2;
     ovr = 2; // overlap
     union () {
-        // exagerate z heigt and cut off to correct size to counter rounded edges
+        // exaggerate z height and cut off to correct size to counter rounded edges
         difference() {
             rounded_cube([size.x, size.y, size.z+wdLatch+plus], radius);
             translate([-ovr, -ovr, size.z]) cube([size.x+2*ovr, size.y+2*ovr, wdLatch+1.5*plus]);
@@ -129,6 +129,7 @@ module seating_AAA (size, thWall=thWall, radius=5) {
 
 
 // tray
+color("LightSkyBlue")
 union () {
     union() {
       difference() {
@@ -145,6 +146,7 @@ union () {
 
 // top
 yTop = dyTray + 15;
+color("LightBlue")
 translate([0, yTop, 0])
 union () {
     // basic top
