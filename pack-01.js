@@ -23,7 +23,9 @@ const { extrudeLinear } = require('@jscad/modeling').extrusions
 
 const getParameterDefinitions = () => {
   return [
-    { name: 'GROUP1', type: 'group', caption: 'Box dimensions:' },
+    { name: 'fShowConnector', type: 'checkbox', checked: true, initial: true, caption: 'Show Connector' },
+    //
+    { name: 'GROUP1', type: 'group', initial: 'closed', caption: 'Box dimensions:' },
     // Tray
     { name: 'dxTray', type: 'number', initial: 60, min: 1, caption: 'Box length:' },
     { name: 'dyTray', type: 'number', initial: 30, min: 1, caption: 'Box width:' },
@@ -31,7 +33,7 @@ const getParameterDefinitions = () => {
     // Top
     { name: 'dzTop', type: 'number', initial: 3, min: 1, step: .1, caption: 'Top height:' },
 
-    { name: 'GROUP2', type: 'group', caption: 'Advanced dimensions:' },
+    { name: 'GROUP2', type: 'group', initial: 'closed', caption: 'Advanced dimensions:' },
     { name: 'radCorners', type: 'number', initial: 0.4, min: 0, step: .01, caption: 'Corner/edge radius:' },
     { name: 'wdLatch', type: 'number', initial: 1, min: 0, step: .1, caption: 'Latch width:' },
 
@@ -44,17 +46,17 @@ const constParameterDefinitions = {
   // Connector
   dxConn: 3,
   dyConn: 11,
+  dzConn: 4,
   yConn: 17,
   //
   thFlap: 1,
   dxFlap: 1,
-  dyFlapA: 6.5,
-  dyFlapB: 14,
+  dyFlapConn: 11, // should be == dyConn !
+  yFlapLift: 16,
+  dyFlapLift: 8,
 }
 
-
 /* ******** */
-
 
 const $s2 = (opts) => {
   const t = Object.assign({ center: [0, 0], size: [2, 2] }, opts)
@@ -72,7 +74,7 @@ const tray_outer = (p, opts = {}) => {
   let { size, wdLatch, radius, noFlaps } = Object.assign({ size: [2, 2, 2], wdLatch: 0, radius: -1, noFlaps: false }, opts)
 
   const surplus = (radius <= 0) ? Math.max(size[2] / 4, 4) : radius * 2
-  const overlap = 2 // overlap
+  const overlap = Math.min(2, p.thWall) // overlap
   radius = (radius < 0) ? Math.ceil((size[0] + size[1] + size[2]) / 3) / 10 : radius
   let result =
     // exaggerate z height and cut off to correct size to counter rounded edges
@@ -91,16 +93,13 @@ const tray_outer = (p, opts = {}) => {
   if (!noFlaps) {
     // connector side flap
     result = union(result,
-      translate([p.dxTray - overlap, 6, 0],
-        union(
-          cuboid($s({ size: [p.dxFlap + overlap, p.dyFlapA, p.thWallThin] })),
-          translate([overlap + .5, 0, 0],
-            cuboid($s({ size: [p.dxFlap - .5, p.dyFlapA, p.thFlap] })))
-        )
+      // connector flap
+      translate([p.dxTray - overlap, p.yConn, p.dzTray - p.thFlap],
+        cuboid($s({ size: [p.dxFlap + overlap, p.dyFlapConn, p.thFlap] }))
       ),
-      // bottom side flap
-      translate([-p.dxFlap, 1, p.dzTray - Math.max(p.thWall, 1)],
-        cuboid($s({ size: [p.dxFlap + Math.min(overlap, p.thWall), p.dyFlapB, p.thFlap] })))
+      // bottom/top side flap
+      translate([-p.dxFlap, p.yFlapLift, 0],
+        cuboid($s({ size: [p.dxFlap + Math.min(overlap, p.thWall), p.dyFlapLift, p.thFlap] })))
     )
   }
   return result
@@ -145,6 +144,25 @@ const seating_AAA = (p, opts = {}) => {
 }
 
 
+const connector = (p) => {
+  return translate([p.dxTray - p.thWall, p.yConn, p.dzTray],
+    subtract(
+      cuboid($s({ size: [p.dxConn, p.dyConn, p.dzConn] })),
+      translate([p.dxConn-1, .5, 0],
+        union(
+          translate([0, 1, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+          translate([0, 2.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+          translate([0, 4, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+          translate([0, 5.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+          translate([0, 7, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+          translate([0, 8.5, 0], cuboid($s({ size: [1, .5, p.dzConn] })))
+        )
+      )
+    )
+  )
+}
+
+
 /* ******** */
 /* ******** */
 
@@ -152,8 +170,10 @@ const seating_AAA = (p, opts = {}) => {
 const main = (p) => {
   p = Object.assign(constParameterDefinitions, p)
 
+  let result = []
+
   // tray
-  const eltTray =
+  result.push(
     union(
       subtract(
         tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTray], wdLatch: p.wdLatch, radius: p.radCorners }),
@@ -166,10 +186,11 @@ const main = (p) => {
       translate([p.dxTray / 3, 0, 0], seating_AAA(p, { size: [p.dxTray, p.dyTray, p.dzTray] })),
       translate([p.dxTray / 3 * 2, 0, 0], seating_AAA(p, { size: [p.dxTray, p.dyTray, p.dzTray] }))
     )
+  )
 
   // top
   yTop = p.dyTray + 15;
-  const eltTop =
+  result.push(
     translate([0, yTop, 0],
       // basic top
       union(
@@ -181,8 +202,15 @@ const main = (p) => {
         )
       )
     )
+  )
 
-  return [eltTray, eltTop]
+  if (p.fShowConnector) {
+    result.push(
+      connector(p)
+    )
+  }
+
+  return result
 }
 
 module.exports = { main, getParameterDefinitions }
