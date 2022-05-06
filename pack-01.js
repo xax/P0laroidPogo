@@ -148,23 +148,29 @@ const connector = (p) => {
   return translate([p.dxTray - p.thWall, p.yConn, p.dzTray],
     subtract(
       cuboid($s({ size: [p.dxConn, p.dyConn, p.dzConn] })),
-      translate([p.dxConn-1, .5, 0],
-        union(
-          translate([0, 1, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
-          translate([0, 2.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
-          translate([0, 4, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
-          translate([0, 5.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
-          translate([0, 7, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
-          translate([0, 8.5, 0], cuboid($s({ size: [1, .5, p.dzConn] })))
+      union(
+        translate([p.dxConn-1, .5, 0],
+          union(
+            translate([0, 1, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+            translate([0, 2.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+            translate([0, 4, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+            translate([0, 5.5, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+            translate([0, 7, 0], cuboid($s({ size: [1, .5, p.dzConn] }))),
+            translate([0, 8.5, 0], cuboid($s({ size: [1, .5, p.dzConn] })))
+          )
+        ),
+        translate([0, .5, p.dzConn-1],
+          translate([0, 1, 0], cuboid($s({ size: [p.dxConn, .5, 1] }))),
+          translate([0, 2.5, 0], cuboid($s({ size: [p.dxConn, .5, 1] }))),
+          translate([0, 4, 0], cuboid($s({ size: [p.dxConn, .5, 1] }))),
+          translate([0, 5.5, 0], cuboid($s({ size: [p.dxConn, .5, 1] }))),
+          translate([0, 7, 0], cuboid($s({ size: [p.dxConn, .5, 1] }))),
+          translate([0, 8.5, 0], cuboid($s({ size: [p.dxConn, .5, 1] })))
         )
       )
     )
   )
 }
-
-
-/* ******** */
-/* ******** */
 
 
 const main = (p) => {
