@@ -24,6 +24,7 @@ const { extrudeLinear } = require('@jscad/modeling').extrusions
 const getParameterDefinitions = () => {
   return [
     { name: 'fShowConnector', type: 'checkbox', checked: true, initial: true, caption: 'Show Connector' },
+    { name: 'fShowAAA', type: 'checkbox', checked: true, initial: true, caption: 'Show AAA seatings' },
     //
     { name: 'GROUP1', type: 'group', initial: 'closed', caption: 'Box dimensions:' },
     // Tray
@@ -44,9 +45,10 @@ const getParameterDefinitions = () => {
 
 const constParameterDefinitions = {
   // Connector
-  dxConn: 3,
+  dxConn: 4.5,
   dyConn: 11,
   dzConn: 4,
+  noxConn: 2,
   yConn: 17,
   //
   thFlap: 1,
@@ -145,7 +147,7 @@ const seating_AAA = (p, opts = {}) => {
 
 
 const connector = (p) => {
-  return translate([p.dxTray - p.thWall, p.yConn, p.dzTray],
+  return translate([p.dxTray - p.noxConn, p.yConn, p.dzTray],
     subtract(
       cuboid($s({ size: [p.dxConn, p.dyConn, p.dzConn] })),
       union(
@@ -180,19 +182,23 @@ const main = (p) => {
 
   // tray
   result.push(
-    union(
-      subtract(
-        tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTray], wdLatch: p.wdLatch, radius: p.radCorners }),
-        tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTray], wdLatch: p.wdLatch }),
-        // connector cutout
-        translate([p.dxTray - p.dxConn, p.yConn, p.dzTray],
-          cuboid($s({ size: [p.dxConn * 2, p.dyConn, p.dzTop * 2] }))
-        )
-      ),
+    subtract(
+      tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTray], wdLatch: p.wdLatch, radius: p.radCorners }),
+      tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTray], wdLatch: p.wdLatch }),
+      // connector cutout
+      translate([p.dxTray - p.dxConn, p.yConn, p.dzTray],
+        cuboid($s({ size: [p.dxConn * 2, p.dyConn, p.dzTop * 2] }))
+      )
+    ),
+  )
+
+  // AAA holders
+  if (p.fShowAAA) {
+    result.push(
       translate([p.dxTray / 3, 0, 0], seating_AAA(p, { size: [p.dxTray, p.dyTray, p.dzTray] })),
       translate([p.dxTray / 3 * 2, 0, 0], seating_AAA(p, { size: [p.dxTray, p.dyTray, p.dzTray] }))
     )
-  )
+  }
 
   // top
   yTop = p.dyTray + 15;
@@ -204,7 +210,7 @@ const main = (p) => {
           tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTop], radius: p.radCorners, noFlaps: true }),
           tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTop], wdLatch: -p.wdLatch }),
           // connector cutout
-          translate([p.dxTray - p.dxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn * 2, p.dyConn, p.dzTop * 2] })))
+          translate([p.dxTray - p.noxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn, p.dyConn, p.dzTop * 2] })))
         )
       )
     )
