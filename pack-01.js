@@ -5,12 +5,21 @@
                    2ATL462849 DLL (Dell)
   Dell™ Part-# D4487
 
-  for Polaroid Pogo™ () / Dell Wasabi™ (PZ310)
+  for Polaroid Pogo™ (CZA-10011B) / Dell Wasabi™ (PZ310)
   +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   Copyright (C) by XA, V 2022. All rights reserved.
   *****************************************************************
 
   Connector:  __/ - - T CHG+ + + \___________
+
+  PCB view (from top / non-cell side):
+
+    +/C2+              C2-
+    ––––               –––+
+    IC IC  O  - - T C + + |
+     O      O         O   |
+    ––––               –––+
+    -/C1-              C1+
 
 */
 
@@ -33,6 +42,8 @@ const getParameterDefinitions = () => {
     { name: 'dzTray', type: 'number', initial: 7, min: 1, caption: 'Box height:' },
     // Top
     { name: 'dzTop', type: 'number', initial: 3, min: 1, step: .1, caption: 'Top height:' },
+    // oversized battery housing
+    { name: 'dzOversize', type: 'number', initial: 0, min: 0, max: 2, step: .1, caption: 'Oversize pack height by:' },
 
     { name: 'GROUP2', type: 'group', initial: 'closed', caption: 'Advanced dimensions:' },
     { name: 'radCorners', type: 'number', initial: 0.4, min: 0, step: .01, caption: 'Corner/edge radius:' },
@@ -58,19 +69,37 @@ const constParameterDefinitions = {
   dyFlapLift: 8,
 }
 
-/* ******** */
+/* ******************
+    Helper Functions
+   ****************** */
 
-const $s2 = (opts) => {
-  const t = Object.assign({ center: [0, 0], size: [2, 2] }, opts)
-  return Object.assign(opts, { center: [t.size[0] * .5 - t.center[0], t.size[1] * .5 - t.center[1]] })
-}
-
+/** Shift left-front-lower 3d coordinates into center-center-center coordinates,
+ *  respectively.
+ *  This facilitates using OpenSCAD workflow regarding `cube(…, centered=false)`
+ *  and similar constructs from JSCAD and `cuboid(…)` et.al.
+ */
 const $s = (opts) => {
+  // provide reasonable default options in temporary `t`
   const t = Object.assign({ center: [0, 0, 0], size: [2, 2, 2] }, opts)
+  // shift by "half" of bounding box
   return Object.assign(opts, { center: [t.size[0] * .5 - t.center[0], t.size[1] * .5 - t.center[1], t.size[2] * .5 - t.center[2]] })
 }
 
-/* ******** */
+/** Shift left-front/lower 2d coordinates into center-center coordinates, respectively.
+ *  This facilitates using OpenSCAD workflow regarding `cube(…, centered=false)`
+ *  and similar constructs from JSCAD and `cuboid(…)` et.al.
+ */
+const $s2 = (opts) => {
+  // provide reasonable default options in temporary `t`
+  const t = Object.assign({ center: [0, 0], size: [2, 2] }, opts)
+  // shift by "half" of bounding box
+  return Object.assign(opts, { center: [t.size[0] * .5 - t.center[0], t.size[1] * .5 - t.center[1]] })
+}
+
+/* ********************
+    Construction Parts
+   ******************** */
+
 
 const tray_outer = (p, opts = {}) => {
   let { size, wdLatch, radius, noFlaps } = Object.assign({ size: [2, 2, 2], wdLatch: 0, radius: -1, noFlaps: false }, opts)
@@ -207,10 +236,10 @@ const main = (p) => {
       // basic top
       union(
         subtract(
-          tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTop], radius: p.radCorners, noFlaps: true }),
-          tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTop], wdLatch: -p.wdLatch }),
+          tray_outer(p, { size: [p.dxTray, p.dyTray, p.dzTop + p.dzOversize], radius: p.radCorners, noFlaps: true }),
+          tray_inner(p, { size: [p.dxTray, p.dyTray, p.dzTop + p.dzOversize], wdLatch: -p.wdLatch }),
           // connector cutout
-          translate([p.dxTray - p.noxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn, p.dyConn, p.dzTop * 2] })))
+          translate([p.dxTray - p.noxConn, p.dyTray - p.yConn - p.dyConn, 0], cuboid($s({ size: [p.dxConn, p.dyConn, p.dzTop * 3] })))
         )
       )
     )
